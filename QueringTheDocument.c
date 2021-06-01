@@ -60,20 +60,39 @@ char**** get_document(char* text) {
 
 int main() {
 
-    char* text = "Bla bla bla.Test.Test.\nBleee.Ble ble ble.";
-    char* pPrev = text;
+    char* text = "Ala ma kota.Kot ma Ale\nAla ma kurwice wiec wypila soplice.";
+    char* pPrevSen = text;
+    char* pPrevWord;
+
+    int parCurrent = 0;
+    int senCurrent = 0;
+    int wordCurrent = 0;
+
 
     do {
-        char* p = strchr(pPrev, '.');
+        char* pSen = strchr(pPrevSen, '.');
         char* sentence = (char*)malloc(MAX_WORDS * MAX_CHARACTERS * sizeof(char));
-        strncpy(sentence, pPrev, (size_t)(p - pPrev));
+        strncpy(sentence, pPrevSen, (size_t)(pSen - pPrevSen));
         sentence = realloc(sentence, strlen(sentence));
         printf("%s\n", sentence); //TODO pyntla do obsługi podziału na słowa, przypisanie słów do document
-        pPrev = p + 1;
-        if(*(pPrev) == '\n')
-            pPrev += 1; //TODO iterowanie pyntli dla kolejnego akapitu
 
-    } while(strchr(pPrev, '.') != NULL);
+            do {
+                    char* pWord = strchr(pPrevWord, ' ');
+                    char* word = (char*)malloc(MAX_CHARACTERS * sizeof(char));
+                    strncpy(word, pPrevWord, (size_t)(pWord - pPrevWord));
+                    word = realloc(word, strlen(word));
+
+            } while(*(pPrevWord) != '.');
+
+        senCurrent++;
+
+        pPrevSen = pSen + 1;
+        if(*(pPrevSen) == '\n') {
+            pPrevSen += 1; //TODO iterowanie pyntli dla kolejnego akapitu
+            parCurrent++;
+        }
+            
+    } while(strchr(pPrevSen, '.') != NULL);
     
     //char**** document = get_document(text);
 
