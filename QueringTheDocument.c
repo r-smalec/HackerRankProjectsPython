@@ -46,7 +46,6 @@ char**** get_document(char* text) {
     int parCurrent = 0;
     int senCurrent = 0;
     int wordCurrent = 0;
-    int dotPos;
 
     do {
         pSen = strchr(pPrevSen, '.');
@@ -60,21 +59,20 @@ char**** get_document(char* text) {
 
             do {
                     pWord = strchr(pPrevWord, ' ');
-                    dotPos = 0;
 
                     if(pWord == NULL) {
 
                         pWord = strchr(pPrevWord, '.');
-                        dotPos = 1;
                         if(pWord == NULL)
                             break;
                     }
                     
                     char* word = (char*)calloc((int)(MAX_CHARACTERS / MAX_WORDS), sizeof(char));
-                    strncpy(word, pPrevWord, (size_t)(pWord + dotPos - pPrevWord));
+                    strncpy(word, pPrevWord, (size_t)(pWord - pPrevWord));
                     word = realloc(word, strlen(word));
                     //printf("%s %d %d %d\n", word, parCurrent, senCurrent, wordCurrent);
                     strcpy(*(*(*(doc + parCurrent) + senCurrent) + wordCurrent), word);
+                    *(*(*(doc + parCurrent) + senCurrent) + wordCurrent) = realloc(*(*(*(doc + parCurrent) + senCurrent) + wordCurrent), strlen(word));
 
                     wordCurrent++;
                     pPrevWord = pWord + 1;
