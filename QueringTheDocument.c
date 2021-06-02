@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include<assert.h>
+#include <assert.h>
 #define MAX_CHARACTERS 1005
 #define MAX_PARAGRAPHS 5
-#define MAX_WORDS 15
-#define MAX_SENTENCES 15
+#define MAX_WORDS 20
+#define MAX_SENTENCES 20
 
 char* kth_word_in_mth_sentence_of_nth_paragraph(char**** document, int k, int m, int n) {
     
@@ -24,80 +24,86 @@ char*** kth_paragraph(char**** document, int k) {
 
 char**** get_document(char* text) {
     
-    char**** document = (char****)malloc(MAX_PARAGRAPHS * sizeof(char***));
-    
-    for(int i = 0; i < MAX_PARAGRAPHS; i++) {
-        *(document + i) = (char***)malloc(MAX_SENTENCES * sizeof(char**));
-        
-        for(int j = 0; j < MAX_WORDS; j++) {
-            *(*(document + i) + j) = (char**)malloc(MAX_WORDS * sizeof(char*));
-            
-            for(int k = 0; k < MAX_CHARACTERS; k++) {
-                *(*(*(document + i) + j) + k) = (char*)malloc(MAX_CHARACTERS * sizeof(char));
+    char**** doc = (char****)malloc(MAX_PARAGRAPHS * sizeof(char***));
+
+    for (int p = 0; p < MAX_PARAGRAPHS; p++) {
+            *(doc + p) = (char***)malloc(MAX_SENTENCES * sizeof(char**));
+
+            for (int s = 0; s < MAX_SENTENCES; s++) {
+                    *(*(doc + p) + s) = (char**)malloc(MAX_WORDS * sizeof(char*));
+
+                    for (int w = 0; w < MAX_WORDS; w++) {
+                            *(*(*(doc + p) + s) + w) = (char*)malloc(MAX_CHARACTERS * sizeof(char));
+                    }
             }
-        }
     }
     
-    char* p = strchr(text, '.');
-    char* sentence;
-    strncpy(sentence, text, p - text);
-
-    char* word;
-    int iPrev = 0;
-
-    for(int i = 0; i < strlen(p); i++) {
-
-        if( *(p + i) == ' ') {
-            
-            strncpy(word, (p + iPrev), i - iPrev);
-        }
-
-        iPrev = i;
-    }
-
-    return document;
-}
-
-int main() {
-
-    char* text = "Ala ma kota.Kot ma Ale\nAla ma kurwice wiec wypila soplice.";
+    char* pSen;
     char* pPrevSen = text;
+    char* pWord;
     char* pPrevWord;
 
     int parCurrent = 0;
     int senCurrent = 0;
     int wordCurrent = 0;
-
+    int dotPos;
 
     do {
-        char* pSen = strchr(pPrevSen, '.');
-        char* sentence = (char*)malloc(MAX_WORDS * MAX_CHARACTERS * sizeof(char));
-        strncpy(sentence, pPrevSen, (size_t)(pSen - pPrevSen));
+        pSen = strchr(pPrevSen, '.');
+        char* sentence = (char*)calloc(MAX_WORDS * MAX_CHARACTERS, sizeof(char));
+        strncpy(sentence, pPrevSen, (size_t)(pSen + 1 - pPrevSen));
         sentence = realloc(sentence, strlen(sentence));
-        printf("%s\n", sentence); //TODO pyntla do obsługi podziału na słowa, przypisanie słów do document
+        pPrevWord = sentence;
+        //printf("%s\n", sentence);
+
+        wordCurrent = 0;
 
             do {
-                    char* pWord = strchr(pPrevWord, ' ');
-                    char* word = (char*)malloc(MAX_CHARACTERS * sizeof(char));
-                    strncpy(word, pPrevWord, (size_t)(pWord - pPrevWord));
+                    pWord = strchr(pPrevWord, ' ');
+                    dotPos = 0;
+
+                    if(pWord == NULL) {
+
+                        pWord = strchr(pPrevWord, '.');
+                        dotPos = 1;
+                        if(pWord == NULL)
+                            break;
+                    }
+                    
+                    char* word = (char*)calloc((int)(MAX_CHARACTERS / MAX_WORDS), sizeof(char));
+                    strncpy(word, pPrevWord, (size_t)(pWord + dotPos - pPrevWord));
                     word = realloc(word, strlen(word));
+                    //printf("%s %d %d %d\n", word, parCurrent, senCurrent, wordCurrent);
+                    strcpy(*(*(*(doc + parCurrent) + senCurrent) + wordCurrent), word);
+
+                    wordCurrent++;
+                    pPrevWord = pWord + 1;
+                    free(word);
 
             } while(*(pPrevWord) != '.');
 
         senCurrent++;
-
         pPrevSen = pSen + 1;
-        if(*(pPrevSen) == '\n') {
-            pPrevSen += 1; //TODO iterowanie pyntli dla kolejnego akapitu
-            parCurrent++;
-        }
-            
-    } while(strchr(pPrevSen, '.') != NULL);
-    
-    //char**** document = get_document(text);
+        free(sentence);
 
-    
-    //printf("%s", kth_word_in_mth_sentence_of_nth_paragraph(document, 0, 1, 1));
-    //free(document);
+        if(*(pPrevSen) == '\n') {
+            pPrevSen += 1;
+            parCurrent++;
+            senCurrent = 0;
+        }
+
+    } while(strchr(pPrevSen, '.') != NULL);
+
+    return doc;
+}
+
+int main() {
+
+    char* text = "Ala ma kota.Kot ma Ale.\nAla ma kurwice, wiec wypila soplice.";
+    //char* text = "Ma ma ma ma ma ma.Be be be be, be be.";
+
+    char**** doc = get_document(text);
+    printf("%s", kth_word_in_mth_sentence_of_nth_paragraph(doc, 1, 1, 1));
+    free(doc);
     return 0;
 }
